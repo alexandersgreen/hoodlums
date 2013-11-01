@@ -1,0 +1,7 @@
+repeat 72 [repeat 4 [fd 100 rt 90] rt 5]
+fd 250 
+repeat 36 [fd 200 rt 170]
+rt 90 fd 250
+repeat 18 [repeat 3 [fd 75 rt 120] rt 20]
+rt 90 fd 250 rt 180 rt 45
+repeat 360 [fd 1 rt 1]
