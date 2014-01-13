@@ -160,7 +160,7 @@ interpret = do
      arg <- getValueFromOffset 1
      putChar arg
      incip 2
-     putStrLn ""
+     putStrLn $ " (" ++ show arg ++ ")"
     Noop -> incip 1 >> putStrLn ""
     Jmp -> do
      arg <- getValueFromOffset 1
@@ -250,7 +250,6 @@ interpret = do
      arg <- getValueFromOffset 1
      addr <- gets ip
      modify $ \s -> s{stack = ((fromIntegral addr) + 2):stack s, ip = fromIntegral arg}
-     s <- get
      putStrLn $ show arg
     Mult -> do
      arg1 <- getAddressFromOffset 1
@@ -274,10 +273,29 @@ interpret = do
      putValueAt arg1 value
      incip 3
      putStrLn $ show arg1 ++ " " ++ show arg2 ++ " (" ++ show value ++ ")"
+    Wmem -> do
+     arg1 <- getValueFromOffset 1
+     arg2 <- getValueFromOffset 2
+     putValueAt (fromIntegral arg1) arg2
+     incip 3
+     putStrLn $ show arg1 ++ " " ++ show arg2
+    Ret -> do
+     --debug
+     st <- gets stack
+     case st of
+      [] -> do
+             ip <- gets ip 
+             putValueAt ip 0
+             putStrLn ""
+      (x:xs) -> do
+                modify $ \s -> s{stack = xs, ip = fromIntegral x}
+                putStrLn $ "(" ++ show x ++ ")"   
     x -> do
      debug <- gets trace
      modify $ \s -> s{trace = True}
-     putStrLn $ "Unimplemented instruction: " ++ show x
+     putStr $ "Unimplemented instruction: " ++ show x
+     s <- get
+     putStrLn $ ", ip=" ++ show (ip s) ++ ", stack=" ++ show (stack s)
      modify $ \s -> s{trace = debug}
      incip $ 1 + (args x)
    interpret
