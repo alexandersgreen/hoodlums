@@ -116,7 +116,7 @@ putChar v = do
  let c = C.chr $ fromIntegral v
  debug <- gets trace
  if debug 
-  then lift $ P.putStrLn $ show c
+  then lift $ P.putStr $ show c
   else lift $ P.putChar c
 
 putStrLn :: String -> Syn ()
@@ -150,8 +150,7 @@ interpret :: Syn ()
 interpret = do
  s <- get
  instruction <- getInstruction
- putStr $ "ip=" ++ show (ip s) ++ ", stack=" ++ show (stack s) 
-            ++ ", instruction=" ++ show instruction ++ " "
+ putStr $ "ip=" ++ show (ip s) ++ ", instruction=" ++ show instruction ++ " "
  case instruction of
   Halt -> return ()
   inst -> do 
@@ -161,7 +160,7 @@ interpret = do
      putChar arg
      incip 2
      putStrLn $ " (" ++ show arg ++ ")"
-    Noop -> incip 1 >> putStrLn ""
+    Noop -> incip 1 >> putStrLn "" 
     Jmp -> do
      arg <- getValueFromOffset 1
      setip arg
@@ -208,7 +207,8 @@ interpret = do
      arg1 <- getValueFromOffset 1
      modify $ \s -> s{stack = arg1:stack s}
      incip 2
-     putStrLn $ show arg1 
+     st <- gets stack
+     putStrLn $ show arg1 ++ ", stack=" ++ show st
     Pop -> do
      arg1 <- getAddressFromOffset 1
      st <- gets stack
@@ -218,7 +218,8 @@ interpret = do
      putValueAt arg1 val
      modify $ \s -> s{stack = st'} 
      incip 2
-     putStrLn $ show arg1
+     st <- gets stack
+     putStrLn $ show arg1 ++ ", stack=" ++ show st
     Gt -> do
      arg1 <- getAddressFromOffset 1
      arg2 <- getValueFromOffset 2
@@ -250,7 +251,8 @@ interpret = do
      arg <- getValueFromOffset 1
      addr <- gets ip
      modify $ \s -> s{stack = ((fromIntegral addr) + 2):stack s, ip = fromIntegral arg}
-     putStrLn $ show arg
+     st <- gets stack
+     putStrLn $ show arg ++ ", stack=" ++ show st
     Mult -> do
      arg1 <- getAddressFromOffset 1
      arg2 <- getValueFromOffset 2
@@ -280,24 +282,22 @@ interpret = do
      incip 3
      putStrLn $ show arg1 ++ " " ++ show arg2
     Ret -> do
-     --debug
      st <- gets stack
      case st of
       [] -> do
              ip <- gets ip 
              putValueAt ip 0
-             putStrLn ""
       (x:xs) -> do
                 modify $ \s -> s{stack = xs, ip = fromIntegral x}
-                putStrLn $ "(" ++ show x ++ ")"   
-    x -> do
-     debug <- gets trace
-     modify $ \s -> s{trace = True}
-     putStr $ "Unimplemented instruction: " ++ show x
-     s <- get
-     putStrLn $ ", ip=" ++ show (ip s) ++ ", stack=" ++ show (stack s)
-     modify $ \s -> s{trace = debug}
-     incip $ 1 + (args x)
+                st <- gets stack
+                putStrLn $ "(" ++ show x ++ "), stack=" ++ show st
+    In -> do
+     arg <- getAddressFromOffset 1
+     putStr $ show arg ++ " ("
+     val <- getChar
+     putValueAt arg val
+     incip 2
+     putStrLn ")"
    interpret
 
 incip :: Int -> Syn ()

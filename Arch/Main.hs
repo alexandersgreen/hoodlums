@@ -11,6 +11,21 @@ main = do
  machine <- loadMachine
  run machine
 
+runFrom :: Address -> IO ()
+runFrom addr = do
+ machine <- loadMachine
+ let machine' = machine{ip = addr}
+ run machine'
+
+game :: IO ()
+game = runFrom 10
+
+runDebug :: IO ()
+runDebug = do
+ machine <- loadMachine
+ let machine' = machine{trace = True}
+ run machine'
+
 lookupCode :: Int -> IO ()
 lookupCode addr = do
  bs <- B.readFile "challenge.bin"
